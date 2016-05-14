@@ -31,50 +31,13 @@ if (!strcmp($fullname,getenv("GIT_REPO_NAME"))) {
 }
 
 $src_url = $payload->repository->url . "/archive/".$branch.".zip";
-print "downloading $src_link\n";
-$path = uniqid('.tmp/git_', true);
-print "to $path\n";
-$fp = fopen($path . ".zip", 'w+');
-print "fp ready\n";
-$ch = curl_init($src_url);
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_FILE, $fp);
-curl_setopt($ch, CURLOPT_VERBOSE, 0);
-$r = curl_exec($ch);
-curl_close($ch);
-fclose($fp);
-print "curl res $r\n";
-system("mkdir $path");
-system("unzip -qq $path.zip -d $path");
+$short_name = $payload->repository->name;
+putenv("GIT_SRC_URL=$src_url");
+putenv("GIT_REPO_SHORTNAME=$short_name");
 
-$src = $path . "/" . $payload->repository->name ."-".$branch;
-print "$src";
+exec("php bg.php > .logs/bg.log 2>&1 &");
 
-function ftp_putAll($conn_id, $src_dir, $dst_dir) {
-    $d = dir($src_dir);
-    while($file = $d->read()) { // do this for each file in the directory
-        if ($file != "." && $file != "..") { // to prevent an infinite loop
-            if (is_dir($src_dir."/".$file)) { // do the following if it is a directory
-                if (!@ftp_chdir($conn_id, $dst_dir."/".$file)) {
-                    ftp_mkdir($conn_id, $dst_dir."/".$file); // create directories that do not yet exist
-                }
-                ftp_putAll($conn_id, $src_dir."/".$file, $dst_dir."/".$file); // recursive part
-            } else {
-                $upload = ftp_put($conn_id, $dst_dir."/".$file, $src_dir."/".$file, FTP_BINARY); // put the files
-            }
-        }
-    }
-    $d->close();
-}
-
-$connection = ftp_connect(getenv("TARGET_FTP_HOST"));
-
-$login = ftp_login($connection, getenv("TARGET_FTP_USER"), getenv("TARGET_FTP_PASS"));
-
-if (!$connection || !$login) { die('Connection attempt failed!'); }
-
-print "connection to ftp ready\n";
+print "done\n";
 
 
 

@@ -21,4 +21,6 @@ ENV TARGET_FTP_PASS x
 ENV TARGET_FTP_PATH x
 
 COPY ./git_hook.php /app
+COPY ./bg.php /app
+COPY ./up.sh /app
 COPY ./updator.conf /etc/php5/fpm/pool.d
